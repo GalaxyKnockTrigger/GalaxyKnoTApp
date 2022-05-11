@@ -3,4 +3,5 @@
     <dimen name="state_icon_size">28dp</dimen>
     <dimen name="state_icon_margin_vertical">10dp</dimen>
     <dimen name="state_icon_margin_horizontal">10dp</dimen>
+    <dimen name="arrow_button">36dp</dimen>
 </resources>
