@@ -9,6 +9,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 
 import com.capstone.galaxyknot.R;
+import com.capstone.galaxyknot.StateManager;
 import com.capstone.galaxyknot.databinding.ClassifierFragmentBinding;
 
 public class ClassifierFragment extends Fragment {
@@ -38,15 +39,19 @@ public class ClassifierFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_classifier, container, false);
-
-        binding.classifierButton.setOnClickListener((view -> {
-            if(view.isSelected()){
-                view.setSelected(false);
-            }else{
-                view.setSelected(true);
-            }
-        }));
+        binding.setFrag(this);
+        binding.setIsClassifier(StateManager.isNowClassifierState);
 
         return binding.getRoot();
+    }
+
+    public void onClassifierButtonClick(View v){
+        if(v.isSelected()){
+            v.setSelected(false);
+            StateManager.isClassifierStart.set(false);
+        }else{
+            v.setSelected(true);
+            StateManager.isClassifierStart.set(true);
+        }
     }
 }
