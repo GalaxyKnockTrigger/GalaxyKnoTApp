@@ -2,16 +2,25 @@
 
 <layout xmlns:app="http://schemas.android.com/apk/res-auto">
     <data class="ClassifierFragmentBinding">
-
+        <variable
+            name="frag"
+            type="com.capstone.galaxyknot.fragment.ClassifierFragment" />
+        <variable
+            name="isClassifier"
+            type="androidx.databinding.ObservableBoolean"/>
+        <import
+            type="android.view.View"/>
     </data>
-    <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:visibility="@{ isClassifier ? View.VISIBLE : View.GONE}"
+        android:tag="@string/classifier_tag">
         <ImageView
             android:id="@+id/classifier_button"
             android:layout_width="60dp"
             android:layout_height="60dp"
-            android:text="@string/classifier_fragment_str"
             android:gravity="center"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -20,6 +29,7 @@
             android:src="@drawable/ic_play_and_stop"
             android:background="@drawable/ic_circle"
             android:backgroundTint="#338833"
+            android:onClick="@{view -> frag.onClassifierButtonClick(view)}"
             />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
