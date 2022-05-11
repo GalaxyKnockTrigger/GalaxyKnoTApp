@@ -2,18 +2,19 @@ package com.capstone.galaxyknot.activity;
 
 import static com.capstone.galaxyknot.Constants.*;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.databinding.DataBindingUtil;
+import androidx.fragment.app.FragmentActivity;
 
 import com.capstone.galaxyknot.R;
+import com.capstone.galaxyknot.StateManager;
 import com.capstone.galaxyknot.databinding.MainActivityBinding;
 import com.capstone.galaxyknot.KnockValidator;
 import com.capstone.galaxyknot.TrustOkHttpClientUtil;
@@ -27,27 +28,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.Security;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.zip.GZIPOutputStream;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
-public class MainActivity extends Activity {
+public class MainActivity extends FragmentActivity {
 
     private MainActivityBinding binding;
     private AudioListener audioListener;
     private OkHttpClient okHttpClient;
 
     private boolean permissionToUseAccepted = false;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +52,10 @@ public class MainActivity extends Activity {
         okHttpClient = TrustOkHttpClientUtil.getUnsafeOkHttpClient().build();
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        binding.setIsClassifier(StateManager.isNowClassifierState);
+        binding.setActivity(this);
+
+//        changeState();
     }
 
     @Override
@@ -105,6 +100,38 @@ public class MainActivity extends Activity {
 //        Log.i("Latency_info", "compress ratio: " + (out.toByteArray().length / str.getBytes().length));
 
         return out.toByteArray();
+    }
+
+    public void onToClassifierButtonClick(View v){
+        Log.i("ONCLICK", "TO_CLASSIFIER_BUTTON");
+
+        if(StateManager.isCollectorStart.get()){
+            Toast.makeText(this, "Need To Stop Collecting", Toast.LENGTH_SHORT).show();
+        }
+        else{
+            StateManager.isNowClassifierState.set(true);
+        }
+        changeState();
+    }
+    public void onToCollectorButtonClick(View v){
+        Log.i("ONCLICK", "TO_COLLECTOR_BUTTON_" + StateManager.isNowClassifierState.get());
+
+        if(StateManager.isClassifierStart.get()){
+            Toast.makeText(this, "Need To Stop", Toast.LENGTH_SHORT).show();
+        }
+        else{
+            StateManager.isNowClassifierState.set(false);
+        }
+        changeState();
+    }
+
+    private void changeState(){
+        if(StateManager.isNowClassifierState.get()){
+            binding.mainNowStatePlaceholder.setContentId(binding.mainNowStatePlaceholder.getId());
+        }
+        else{
+            binding.mainNowStatePlaceholder.setContentId(binding.mainNowStateImage.getId());
+        }
     }
 
 }
