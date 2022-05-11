@@ -3,4 +3,6 @@
     <!-- TODO: Remove or change this placeholder text -->
     <string name="collector_fragment_str">Hello Collector</string>
     <string name="classifier_fragment_str">Hello Classifier</string>
+    <string name="classifier_tag">classifier</string>
+    <string name="collector_tag">collector</string>
 </resources>
