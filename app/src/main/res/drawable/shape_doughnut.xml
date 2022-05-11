@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
-    android:shape="oval"
-    android:innerRadius="@dimen/state_icon_size">
-    <stroke
-        android:width="4dp"
-        />
+    android:shape="ring"
+    android:innerRadiusRatio="2.5"
+    android:thicknessRatio="16"
+    android:useLevel="false"
+    >
+    <solid
+        android:color="#FFFFFF"/>
 </shape>
