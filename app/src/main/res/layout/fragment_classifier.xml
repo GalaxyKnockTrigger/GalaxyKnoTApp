@@ -19,16 +19,14 @@
         android:tag="@string/classifier_tag">
         <ImageView
             android:id="@+id/classifier_button"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:gravity="center"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             android:src="@drawable/ic_play_and_stop"
-            android:background="@drawable/ic_circle"
-            android:backgroundTint="#338833"
             android:onClick="@{view -> frag.onClassifierButtonClick(view)}"
             />
     </androidx.constraintlayout.widget.ConstraintLayout>
