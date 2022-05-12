@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.capstone.galaxyknot.AppManager;
 import com.capstone.galaxyknot.R;
 import com.capstone.galaxyknot.StateManager;
 import com.capstone.galaxyknot.databinding.CollectorFragmentBinding;
@@ -48,6 +49,7 @@ public class CollectorFragment extends Fragment {
         binding = DataBindingUtil.inflate(inflater, R.layout.fragment_collector, container, false);
         binding.setFrag(this);
         binding.setIsClassifier(StateManager.isNowClassifierState);
+        AppManager.getInstance().setCollectorOwner(this.getViewLifecycleOwner());
 
         return binding.getRoot();
     }
