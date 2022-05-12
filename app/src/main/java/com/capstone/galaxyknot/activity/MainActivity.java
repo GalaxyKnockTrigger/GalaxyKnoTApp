@@ -5,40 +5,31 @@ import static com.capstone.galaxyknot.Constants.*;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
+import androidx.core.view.InputDeviceCompat;
+import androidx.core.view.MotionEventCompat;
+import androidx.core.view.ViewConfigurationCompat;
 import androidx.databinding.DataBindingUtil;
+import androidx.databinding.Observable;
 import androidx.fragment.app.FragmentActivity;
 
+import com.capstone.galaxyknot.AppManager;
 import com.capstone.galaxyknot.R;
 import com.capstone.galaxyknot.StateManager;
 import com.capstone.galaxyknot.databinding.MainActivityBinding;
-import com.capstone.galaxyknot.KnockValidator;
-import com.capstone.galaxyknot.TrustOkHttpClientUtil;
-import com.capstone.galaxyknot.listener.AudioListener;
-
-import org.conscrypt.Conscrypt;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.Security;
-import java.util.zip.GZIPOutputStream;
-
-import okhttp3.OkHttpClient;
 
 public class MainActivity extends FragmentActivity {
 
     private MainActivityBinding binding;
-    private AudioListener audioListener;
-    private OkHttpClient okHttpClient;
-
     private boolean permissionToUseAccepted = false;
+    private AppManager appManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,16 +37,54 @@ public class MainActivity extends FragmentActivity {
 
         ActivityCompat.requestPermissions(this, permissions, RCODE);
 
-        audioListener = new AudioListener(getApplicationContext());
-
-        Security.insertProviderAt(Conscrypt.newProvider(), 1);
-        okHttpClient = TrustOkHttpClientUtil.getUnsafeOkHttpClient().build();
+        appManager = AppManager.getInstance(this.getApplicationContext());
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         binding.setIsClassifier(StateManager.isNowClassifierState);
-        binding.setActivity(this);
+        StateManager.setPropertyChangedCallback(StateManager.NOW_STATE,
+                new Observable.OnPropertyChangedCallback() {
+                    @Override
+                    public void onPropertyChanged(Observable sender, int propertyId) {
+                        changeState();
+                    }
+                });
 
-//        changeState();
+        binding.setActivity(this);
+        binding.getRoot().requestFocus();
+
+        Log.i("MAIN_ACTIVITY", "onCreate Finished");
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        appManager.startAudioThread();
+    }
+
+    @Override
+    public boolean onGenericMotionEvent(MotionEvent ev) {
+        Log.i("GENERICMOTION", "NOW: "+ev.getAction());
+        Log.i("GENERICMOTION", "WANT: "+MotionEvent.ACTION_SCROLL);
+        if(ev.getAction() == MotionEvent.ACTION_SCROLL && ev.isFromSource(InputDeviceCompat.SOURCE_ROTARY_ENCODER) ){
+
+            float delta = - ev.getAxisValue(MotionEventCompat.AXIS_SCROLL)*
+                    ViewConfigurationCompat.getScaledVerticalScrollFactor(
+                            ViewConfiguration.get(getApplicationContext()), getApplicationContext()
+                    );
+
+            Log.i("ROTARY_VALUE", "" + delta);
+
+            if(delta > 1.0){
+                toCollector();
+            }
+            else if(delta < -1.0){
+                toClassifier();
+            }
+            else
+                return false;
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -78,56 +107,39 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
-    private byte[] compress(String str) throws IOException {
-
-        if (str == null || str.length() == 0) {
-            return null;
-        }
-
-        long start = System.currentTimeMillis();
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        GZIPOutputStream gzip = new GZIPOutputStream(out);
-        gzip.write(str.getBytes(StandardCharsets.UTF_8));
-        gzip.flush();
-        gzip.close();
-//        Log.i("COMPRESS_INFO_BEFORE", str);
-//        Log.i("COMPRESS_INFO_AFTER", out.toString());
-
-
-        long end = System.currentTimeMillis();
-
-//        Log.i("Latency_info", "compress latency: " + (end-start));
-//        Log.i("Latency_info", "compress ratio: " + (out.toByteArray().length / str.getBytes().length));
-
-        return out.toByteArray();
+    public void onToClassifierButtonClick(View v){
+        toClassifier();
     }
 
-    public void onToClassifierButtonClick(View v){
+    public void onToCollectorButtonClick(View v){
+        toCollector();
+    }
+
+    private void toClassifier(){
         Log.i("ONCLICK", "TO_CLASSIFIER_BUTTON");
 
-        if(StateManager.isCollectorStart.get()){
+        if(StateManager.isCollectorStart.getValue()){
             Toast.makeText(this, "Need To Stop Collecting", Toast.LENGTH_SHORT).show();
         }
         else{
             StateManager.isNowClassifierState.set(true);
         }
-        changeState();
     }
-    public void onToCollectorButtonClick(View v){
+
+    private void toCollector(){
         Log.i("ONCLICK", "TO_COLLECTOR_BUTTON_" + StateManager.isNowClassifierState.get());
 
-        if(StateManager.isClassifierStart.get()){
+        if(StateManager.isClassifierStart.getValue()){
             Toast.makeText(this, "Need To Stop", Toast.LENGTH_SHORT).show();
         }
         else{
             StateManager.isNowClassifierState.set(false);
         }
-        changeState();
     }
 
     private void changeState(){
         if(StateManager.isNowClassifierState.get()){
-            binding.mainNowStatePlaceholder.setContentId(binding.mainNowStatePlaceholder.getId());
+            binding.mainNowStatePlaceholder.setContentId(ConstraintLayout.LayoutParams.UNSET);
         }
         else{
             binding.mainNowStatePlaceholder.setContentId(binding.mainNowStateImage.getId());
