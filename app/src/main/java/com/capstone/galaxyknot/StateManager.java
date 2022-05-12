@@ -1,11 +1,44 @@
 package com.capstone.galaxyknot;
 
+import androidx.databinding.Observable;
 import androidx.databinding.ObservableBoolean;
+import androidx.lifecycle.LifecycleObserver;
+import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.Observer;
 
 public class StateManager {
-    public static ObservableBoolean isNowClassifierState = new ObservableBoolean(true);
-    public static ObservableBoolean isStateTransaction   = new ObservableBoolean(false);
-    public static ObservableBoolean isClassifierStart    = new ObservableBoolean(false);
-    public static ObservableBoolean isCollectorStart     = new ObservableBoolean(false);
+    public static final int NOW_STATE           = 0;
+    public static final int CLASSIFIER_START    = 1;
+    public static final int COLLECTOR_START     = 2;
+    public static final int STATE_TRANSACTION   = 3;
+    public static final int RECORD_END = 4;
 
+    public static ObservableBoolean isNowClassifierState = new ObservableBoolean(true);
+
+    public static MutableLiveData<Boolean> isClassifierStart    = new MutableLiveData<>(false);
+    public static MutableLiveData<Boolean> isCollectorStart     = new MutableLiveData<>(false);
+    public static MutableLiveData<Boolean> isStateTransaction   = new MutableLiveData<>(false);
+
+    public static MutableLiveData<Boolean> isRecordEnd = new MutableLiveData<>(false);
+
+
+    public static void setPropertyChangedCallback(int id, Observable.OnPropertyChangedCallback callback){
+        if(id == NOW_STATE){
+            isNowClassifierState.addOnPropertyChangedCallback(callback);
+        }
+    }
+    public static void setObserver(int id, Observer<Boolean> observer, LifecycleOwner owner){
+        if(id == CLASSIFIER_START){
+            if(!isClassifierStart.hasActiveObservers())
+                isClassifierStart.observe(owner, observer);
+        }
+        else if(id == COLLECTOR_START){
+            if(!isCollectorStart.hasActiveObservers())
+                isCollectorStart.observe(owner, observer);
+        }
+        else if(id == RECORD_END){
+            isRecordEnd.observe(owner, observer);
+        }
+    }
 }
