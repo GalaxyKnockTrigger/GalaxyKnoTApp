@@ -127,7 +127,7 @@ public class AppManager {
     public void setClassifierOwner(LifecycleOwner classifierOwner) {
         this.classifierOwner = classifierOwner;
         if(!StateManager.isClassifierStart.hasObservers()){
-            StateManager.setObserve(StateManager.CLASSIFIER_START, new Observer<Boolean>() {
+            StateManager.setObserver(StateManager.CLASSIFIER_START, new Observer<Boolean>() {
                 @Override
                 public void onChanged(Boolean aBoolean) {
                     Log.i("AUDIO_INFO", "CLASSIFIER_START_CHANGED");
@@ -137,7 +137,7 @@ public class AppManager {
                     }
                 }
             }, classifierOwner);
-            StateManager.setObserve(StateManager.RECORD_END, new Observer<Boolean>() {
+            StateManager.setObserver(StateManager.RECORD_END, new Observer<Boolean>() {
                 private boolean isStart = false;
                 @Override
                 public void onChanged(Boolean val) {
@@ -196,7 +196,7 @@ public class AppManager {
     public void setCollectorOwner(LifecycleOwner collectorOwner) {
         this.collectorOwner = collectorOwner;
         if(!StateManager.isCollectorStart.hasObservers()) {
-            StateManager.setObserve(StateManager.COLLECTOR_START, new Observer<Boolean>() {
+            StateManager.setObserver(StateManager.COLLECTOR_START, new Observer<Boolean>() {
                 @Override
                 public void onChanged(Boolean aBoolean) {
                     Log.i("AUDIO_INFO", "CLASSIFIER_START_CHANGED");
@@ -206,7 +206,7 @@ public class AppManager {
                     }
                 }
             }, collectorOwner);
-            StateManager.setObserve(StateManager.RECORD_END, new Observer<Boolean>() {
+            StateManager.setObserver(StateManager.RECORD_END, new Observer<Boolean>() {
                 @Override
                 public void onChanged(Boolean val) {
                     // record end가 true일 때
