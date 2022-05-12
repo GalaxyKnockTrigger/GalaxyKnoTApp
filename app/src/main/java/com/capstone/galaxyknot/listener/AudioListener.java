@@ -1,6 +1,8 @@
 package com.capstone.galaxyknot.listener;
 
+import static com.capstone.galaxyknot.Constants.AUDIO_SAMP_RATE;
 import static com.capstone.galaxyknot.Constants.RECEIVING_TIME;
+import static com.capstone.galaxyknot.Constants.TH_SOUND_PEAK;
 
 import android.Manifest;
 import android.content.Context;
@@ -13,70 +15,114 @@ import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 
+import com.capstone.galaxyknot.StateManager;
 import java.nio.ShortBuffer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
-import java.util.List;
 
-public class AudioListener implements IGetDataAsCSV, IGetDataSize {
+public class AudioListener implements IGetDataSize {
     private final AudioManager audioManager;
     private AudioRecord recorder;
-    private final int SAMP_RATE = 48000;
-    private final int bufferShortSize = SAMP_RATE * RECEIVING_TIME/1000;
+    private final int bufferShortSize = 4096;
     private short[] bufferRecord;
     private int bufferRecordSize;
-    private final ShortBuffer shortBuffer = ShortBuffer.allocate(SAMP_RATE * RECEIVING_TIME / 1000);
+    private final ShortBuffer shortBuffer = ShortBuffer.allocate(4096 * 4);
     private final Context context;
 
     public AudioListener(Context context) {
         this.context = context;
         audioManager = (AudioManager) this.context.getSystemService(Context.AUDIO_SERVICE);
-        Log.i("AUDIO_INFO", audioManager.getProperty(AudioManager.PROPERTY_SUPPORT_AUDIO_SOURCE_UNPROCESSED));
         recorder = null;
 //
+        Log.i("AUDIO_INFO", "Audio Listener Initialized");
 //        setting();
     }
 
+    private final Thread recordStart = new Thread(){
+        @Override
+        public synchronized void start() {
+            super.start();
+            startRecording();
+        }
+    };
+
+    private final Thread recordStop = new Thread(){
+        @Override
+        public synchronized void start() {
+            super.start();
+            stopRecording();
+        }
+    };
     public void onRecord(boolean start) {
         if (start) {
-            startRecording();
+            Log.i("AUDIO_INFO", "On Record Start");
+            recordStart.start();
         } else {
-            stopRecording();
+            Log.i("AUDIO_INFO", "On Record Stop");
+            recordStop.start();
         }
     }
 
     private void startRecording() {
-//        try {
-            setting();
-//            wait(500);
-//        } catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
+        setting();
         Log.i("AUDIO_INFO", "RECEIVE START");
-        while (shortBuffer.position() + bufferRecordSize <= bufferShortSize) {
-            shortBuffer.put(bufferRecord, 0, recorder.read(bufferRecord, 0, bufferRecordSize));
+
+        boolean recordStart = false;
+
+        while(StateManager.isClassifierStart.getValue()){
+            if(StateManager.isRecordEnd.getValue() && !recordStart){
+                continue;
+            }
+            synchronized (shortBuffer) {
+//                try {
+//                    shortBuffer.wait();
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+                int size = recorder.read(bufferRecord, 0, bufferRecordSize);
+                if (!recordStart) {
+                    for (short val : bufferRecord) {
+                        if (val > TH_SOUND_PEAK) {
+                            Log.i("AUDIO_INFO_VAL", "" + val);
+                            recordStart = true;
+                            shortBuffer.put(bufferRecord, 0, size);
+                            break;
+                        }
+                    }
+                } else {
+                    shortBuffer.put(bufferRecord, 0, size);
+                    if (shortBuffer.position() + bufferRecordSize > bufferShortSize) {
+                        StateManager.isRecordEnd.postValue(true);
+                        recordStart = false;
+                    }
+                }
+            }
         }
     }
 
     private void stopRecording() {
-        int Index=0;
         shortBuffer.position(0);
 
-        recorder.stop();
-        recorder.release();
-        recorder = null;
+        if(recorder != null){
+            recorder.stop();
+            recorder.release();
+            recorder = null;
+        }
+
     }
 
     private void setting(){
-        bufferRecordSize = AudioRecord.getMinBufferSize(SAMP_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
+        Log.i("AUDIO_INFO", "Setting Buffer Property");
+        bufferRecordSize = AudioRecord.getMinBufferSize(AUDIO_SAMP_RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
         bufferRecord = new short[bufferRecordSize];
+
+        Log.i("AUDIO_INFO", "Check Self Permission");
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
         recorder = new AudioRecord(MediaRecorder.AudioSource.MIC,
-                SAMP_RATE,
+                AUDIO_SAMP_RATE,
                 AudioFormat.CHANNEL_IN_MONO,
                 AudioFormat.ENCODING_PCM_16BIT,
                 bufferRecordSize);
@@ -87,48 +133,29 @@ public class AudioListener implements IGetDataAsCSV, IGetDataSize {
 
         recorder.startRecording();
         shortBuffer.rewind();
-
+        shortBuffer.position(0);
     }
 
-    public synchronized LinkedList<Short> getData(){
-        Short[] arr = new Short[shortBuffer.array().length];
+    public LinkedList<Short> getData(){
+        Short[] arr = new Short[4096];
 
         int i = 0;
-        for(short v : shortBuffer.array()){
-            arr[i] = v;
-            i++;
+        synchronized (shortBuffer){
+            for(short v : shortBuffer.array()){
+                if(i >= 4096)
+                    break;
+                arr[i] = v;
+                i++;
+            }
+            shortBuffer.rewind();
+            shortBuffer.position(0);
         }
-
         return new LinkedList<>(Arrays.asList(arr));
     }
 
     @Override
     public int getDataSize(){
         return bufferRecord.length;
-    }
-    @Override
-    public String getDataAsCSV(){
-        StringBuilder builder = new StringBuilder();
-        int i = 0;
-
-        int j = 0;
-        for(short val : getData()){
-            builder.append(val).append("\n");
-            i++;
-//            if(builder.length() / 500 > j){
-//                builder.append('\n');
-//                j++;
-//            }
-//            if( i >= 48000)
-//                break;
-        }
-
-        String ret = builder.toString();
-
-        Log.i("AUDIO_RAW_VAL", ret);
-
-//        shortBuffer.clear();
-        return ret;
     }
 
 }
