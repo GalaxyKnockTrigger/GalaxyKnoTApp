@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="state_icon_size">28dp</dimen>
-    <dimen name="state_icon_margin_vertical">10dp</dimen>
+    <dimen name="state_icon_margin_vertical">6dp</dimen>
     <dimen name="state_icon_margin_horizontal">10dp</dimen>
     <dimen name="arrow_button">36dp</dimen>
+    <dimen name="background_size">80dp</dimen>
 </resources>
