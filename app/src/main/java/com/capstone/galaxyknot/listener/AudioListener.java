@@ -41,7 +41,6 @@ public class AudioListener implements IGetDataSize {
     private final Thread recordStart = new Thread(){
         @Override
         public synchronized void start() {
-            super.start();
             startRecording();
         }
     };
@@ -49,17 +48,19 @@ public class AudioListener implements IGetDataSize {
     private final Thread recordStop = new Thread(){
         @Override
         public synchronized void start() {
-            super.start();
             stopRecording();
         }
     };
     public void onRecord(boolean start) {
         if (start) {
             Log.i("AUDIO_INFO", "On Record Start");
-            recordStart.start();
+            if(!recordStart.isAlive()){
+                recordStart.start();
+            }
         } else {
             Log.i("AUDIO_INFO", "On Record Stop");
-            recordStop.start();
+            if(!recordStop.isAlive())
+                recordStop.start();
         }
     }
 
@@ -69,23 +70,21 @@ public class AudioListener implements IGetDataSize {
 
         boolean recordStart = false;
 
+        long start = 0;
         while(StateManager.isClassifierStart.getValue()){
             if(StateManager.isRecordEnd.getValue() && !recordStart){
                 continue;
             }
             synchronized (shortBuffer) {
-//                try {
-//                    shortBuffer.wait();
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
                 int size = recorder.read(bufferRecord, 0, bufferRecordSize);
                 if (!recordStart) {
-                    for (short val : bufferRecord) {
+                    for(int i = 0; i < bufferRecord.length; i++){
+                        short val = bufferRecord[i];
                         if (val > TH_SOUND_PEAK) {
                             Log.i("AUDIO_INFO_VAL", "" + val);
                             recordStart = true;
-                            shortBuffer.put(bufferRecord, 0, size);
+                            shortBuffer.put(bufferRecord, i, size - i);
+                            start = System.currentTimeMillis();
                             break;
                         }
                     }
@@ -94,6 +93,7 @@ public class AudioListener implements IGetDataSize {
                     if (shortBuffer.position() + bufferRecordSize > bufferShortSize) {
                         StateManager.isRecordEnd.postValue(true);
                         recordStart = false;
+                        Log.i("Latency_info", "Collecting Latency: " + (System.currentTimeMillis() - start));
                     }
                 }
             }
@@ -137,19 +137,25 @@ public class AudioListener implements IGetDataSize {
     }
 
     public LinkedList<Short> getData(){
+        long start = System.currentTimeMillis();
         Short[] arr = new Short[4096];
 
         int i = 0;
+        StringBuilder sb = new StringBuilder().append('\n');
         synchronized (shortBuffer){
             for(short v : shortBuffer.array()){
                 if(i >= 4096)
                     break;
                 arr[i] = v;
+                sb.append(arr[i]).append('\n');
                 i++;
             }
             shortBuffer.rewind();
             shortBuffer.position(0);
         }
+
+        Log.i("AUDIO_VAL", sb.toString());
+        Log.i("Latency_info", "Getting Data Latency: " + (System.currentTimeMillis() - start));
         return new LinkedList<>(Arrays.asList(arr));
     }
 
