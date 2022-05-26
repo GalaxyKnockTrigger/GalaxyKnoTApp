@@ -138,14 +138,13 @@ public class AppManager {
                 }
             }, classifierOwner);
             StateManager.setObserver(StateManager.RECORD_END, new Observer<Boolean>() {
-                private boolean isStart = false;
                 @Override
                 public void onChanged(Boolean val) {
                     // record end가 true일 때
-                    if(val && StateManager.isNowClassifierState.get() && !isStart){
-                        isStart = true;
+                    if(val && StateManager.isNowClassifierState.get()){
                         Log.i("AUDIO_INFO", "RECORD is ENDED + CLASSIFIER");
                         try {
+                            final long cstart = System.currentTimeMillis();
 
                             Log.i("NETWORK", "MAKE REQUEST BODY");
                             RequestBody requestBody = RequestBody.create(
@@ -155,14 +154,13 @@ public class AppManager {
                             Log.i("NETWORK", "MAKE REQUEST");
 
                             Request request = new Request.Builder()
-                                    .addHeader("label", "Test") // TODO: 테스트 끝나면 삭제
-                                    .addHeader("type","collector")
+                                    .addHeader("type","classifier")
                                     .post(requestBody)
                                     .url(URL + ":" + PORT)
                                     .build();
 
+                            long mid = System.currentTimeMillis();
                             Log.i("NETWORK", "SEND_DATA");
-                            final long cstart = System.currentTimeMillis();
                             okHttpClient.newCall(request).enqueue(new Callback() {
                                 @Override
                                 public void onFailure(@NonNull Call call, @NonNull IOException e) {
@@ -178,14 +176,17 @@ public class AppManager {
                                     Log.i("NETWORK_TEST", "File Transfer SUCCESS");
 //                                Toast.makeText(MainActivity.this, "Success", Toast.LENGTH_SHORT).show();
                                     response.body().close();
-                                    Log.i("Latency_info", "communication latency: " + (System.currentTimeMillis()-cstart));
+                                    long end =System.currentTimeMillis();
+                                    Log.i("Latency_info", "total communication latency: " + (end -cstart));
+                                    Log.i("Latency_info", "only communication latency: " + (end -mid));
+                                    Log.i("Latency_info", "communication prepare latency: " + (mid - cstart));
+
                                 }
                             });
                         } catch (IOException e) {
                             e.printStackTrace();
                         }finally{
                             StateManager.isRecordEnd.postValue(false);
-                            isStart = false;
                         }
                     }
                 }
@@ -216,8 +217,6 @@ public class AppManager {
                 }
             }, collectorOwner);
         }
-
-
     }
 
     private byte[] compress(List<Short> sh) throws IOException {
