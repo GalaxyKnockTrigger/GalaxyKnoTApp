@@ -5,4 +5,5 @@
     <dimen name="state_icon_margin_horizontal">10dp</dimen>
     <dimen name="arrow_button">36dp</dimen>
     <dimen name="background_size">80dp</dimen>
+    <dimen name="collector_ui_margin">5dp</dimen>
 </resources>
