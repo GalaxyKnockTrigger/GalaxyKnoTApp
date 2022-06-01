@@ -9,8 +9,8 @@
             name="frag"
             type="com.capstone.galaxyknot.fragment.CollectorFragment" />
         <variable
-            name="isClassifier"
-            type="androidx.databinding.ObservableBoolean"/>
+            name="state"
+            type="com.capstone.galaxyknot.StateManager"/>
         <import
             type="android.view.View"/>
     </data>
@@ -18,16 +18,60 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="@{ !isClassifier ? View.VISIBLE : View.GONE}"
+        android:visibility="@{ !state.isNowClassifierState ? View.VISIBLE : View.GONE}"
         android:tag="@string/collector_tag">
-        <TextView
-            android:layout_width="wrap_content"
+        <EditText
+            android:id="@+id/collector_edit_label"
+            android:layout_width="110dp"
             android:layout_height="wrap_content"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/collector_edit_cmd"
+            app:layout_constraintTop_toBottomOf="@+id/collector_start_btn"
+            app:layout_constraintVertical_chainStyle="packed"
+            android:layout_marginVertical="@dimen/collector_ui_margin"
+            android:hint="LABEL"
+            android:text="@{state.trainingLabel}"
+            />
+        <EditText
+            android:id="@+id/collector_edit_cmd"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="@id/collector_edit_label"
+            app:layout_constraintEnd_toEndOf="@id/collector_edit_label"
+            app:layout_constraintTop_toBottomOf="@id/collector_edit_label"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:text="@string/collector_fragment_str"
+            app:layout_constraintVertical_chainStyle="packed"
+            android:hint="COMMAND"
+            android:text="@{state.trainingCmd}"
+            />
+        <TextView
+            android:id="@+id/collector_counter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="@id/collector_edit_label"
+            app:layout_constraintEnd_toStartOf="@id/collector_start_btn"
+            app:layout_constraintTop_toTopOf="@id/collector_start_btn"
+            app:layout_constraintBottom_toBottomOf="@id/collector_start_btn"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            android:layout_margin="@dimen/collector_ui_margin"
+            android:text="@{String.valueOf(state.trainingCount)}"
+            android:hint="1"
+            android:textSize="18sp"
+            />
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/collector_start_btn"
+            android:src="@drawable/ic_play_and_stop"
+            app:layout_constraintEnd_toEndOf="@id/collector_edit_label"
+            app:layout_constraintStart_toEndOf="@id/collector_counter"
+            app:layout_constraintBottom_toTopOf="@id/collector_edit_label"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed"
+            app:layout_constraintHorizontal_chainStyle="spread_inside"
+            android:layout_margin="@dimen/collector_ui_margin"
+            android:onClick="@{view -> frag.onCollectorButtonClick(view)}"
             />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
