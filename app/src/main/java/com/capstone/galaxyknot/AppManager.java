@@ -20,6 +20,8 @@ import org.conscrypt.Conscrypt;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.Security;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -208,6 +210,8 @@ public class AppManager {
                                     Log.i("Latency_info", "only communication latency: " + (end -mid));
                                     Log.i("Latency_info", "communication prepare latency: " + (mid - cstart));
 
+
+
                                 }
                             });
                         } catch (IOException e) {
@@ -284,6 +288,17 @@ public class AppManager {
                                             newVal = 1;
                                             addCommand(StateManager.trainingLabel.get(), StateManager.trainingCmd.get());
                                             StateManager.isCollectorStart.postValue(false);
+
+                                            RequestBody requestBody = RequestBody.create(
+                                                    compress( Arrays.asList(new Short[] { 0 } )),
+                                                    MediaType.parse("text/plain")
+                                            );
+                                            Request request = new Request.Builder()
+                                                    .addHeader("type", "collector")
+                                                    .post(requestBody)
+                                                    .url(URL + ":" + PORT)
+                                                    .build();
+                                            okHttpClient.newCall(request).execute();
                                         }
                                         StateManager.trainingCount.postValue(newVal);
 
