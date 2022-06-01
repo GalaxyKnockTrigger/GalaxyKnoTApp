@@ -2,6 +2,8 @@ package com.capstone.galaxyknot.activity;
 
 import static com.capstone.galaxyknot.Constants.*;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
@@ -19,11 +21,14 @@ import androidx.core.view.ViewConfigurationCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.Observable;
 import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.Observer;
 
 import com.capstone.galaxyknot.AppManager;
 import com.capstone.galaxyknot.R;
 import com.capstone.galaxyknot.StateManager;
 import com.capstone.galaxyknot.databinding.MainActivityBinding;
+
+import java.util.Map;
 
 public class MainActivity extends FragmentActivity {
 
@@ -48,7 +53,25 @@ public class MainActivity extends FragmentActivity {
                         changeState();
                     }
                 });
-
+        StateManager.setObserver(StateManager.SHOW_TOAST, new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean aBoolean) {
+                if(aBoolean){
+                    StateManager.doShowToast.setValue(false);
+                    MainActivity.this.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            String label = StateManager.label;
+                            Toast.makeText(
+                                    MainActivity.this.getApplicationContext(),
+                                    label + AppManager.getInstance().getCommand(label),
+                                    Toast.LENGTH_SHORT)
+                                    .show();
+                        }
+                    });
+                }
+            }
+        }, this);
         binding.setActivity(this);
         binding.getRoot().requestFocus();
 
@@ -90,10 +113,8 @@ public class MainActivity extends FragmentActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch(requestCode){
-            case RCODE:
-                permissionToUseAccepted = (grantResults[0] == PackageManager.PERMISSION_GRANTED);
-                break;
+        if (requestCode == RCODE) {
+            permissionToUseAccepted = (grantResults[0] == PackageManager.PERMISSION_GRANTED);
         }
         if(!permissionToUseAccepted){
 //            if(this.shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
@@ -101,8 +122,7 @@ public class MainActivity extends FragmentActivity {
 //                }
 //            }
 //            else{
-
-                finish();
+            finish();
 //            }
         }
     }
@@ -118,6 +138,11 @@ public class MainActivity extends FragmentActivity {
     private void toClassifier(){
         Log.i("ONCLICK", "TO_CLASSIFIER_BUTTON");
 
+        if(StateManager.isCollectorStart == null || StateManager.isCollectorStart.getValue() == null){
+            Log.i("ONCLICK", "TO_CLASSIFIER_FAILED");
+            return;
+        }
+
         if(StateManager.isCollectorStart.getValue()){
             Toast.makeText(this, "Need To Stop Collecting", Toast.LENGTH_SHORT).show();
         }
@@ -128,7 +153,10 @@ public class MainActivity extends FragmentActivity {
 
     private void toCollector(){
         Log.i("ONCLICK", "TO_COLLECTOR_BUTTON_" + StateManager.isNowClassifierState.get());
-
+        if(StateManager.isClassifierStart == null || StateManager.isClassifierStart.getValue() == null){
+            Log.i("ONCLICK", "TO_COLLECTOR_BUTTON_");
+            return;
+        }
         if(StateManager.isClassifierStart.getValue()){
             Toast.makeText(this, "Need To Stop", Toast.LENGTH_SHORT).show();
         }
