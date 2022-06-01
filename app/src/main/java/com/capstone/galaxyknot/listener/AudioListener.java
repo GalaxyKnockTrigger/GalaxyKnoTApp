@@ -71,7 +71,7 @@ public class AudioListener implements IGetDataSize {
         boolean recordStart = false;
 
         long start = 0;
-        while(StateManager.isClassifierStart.getValue()){
+        while(StateManager.isClassifierStart.getValue() || StateManager.isCollectorStart.getValue()){
             if(StateManager.isRecordEnd.getValue() && !recordStart){
                 continue;
             }
