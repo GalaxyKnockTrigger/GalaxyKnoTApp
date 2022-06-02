@@ -1,18 +1,17 @@
 package com.capstone.galaxyknot;
 
 import static com.capstone.galaxyknot.Constants.PORT;
+import static com.capstone.galaxyknot.Constants.TRAINING_SET_COUNT;
 import static com.capstone.galaxyknot.Constants.URL;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
 
-import com.capstone.galaxyknot.activity.MainActivity;
 import com.capstone.galaxyknot.listener.AudioListener;
 
 import org.conscrypt.Conscrypt;
@@ -20,7 +19,6 @@ import org.conscrypt.Conscrypt;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.security.Security;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -45,9 +43,9 @@ public class AppManager {
     private boolean isClassifierStartChanged = false;
     private boolean isCollectorStartChanged = false;
 
-    private Map<String, String> labelAndCmd;
+    private Map<String, String> cmdAndLabel;
     private SharedPreferences sharedPref;
-    private final Thread postValues = new Thread(()->{
+    private final Thread postValues = new Thread(() -> {
         try {
             RequestBody requestBody = RequestBody.create(
                     compress(audioListener.getData()),
@@ -55,7 +53,7 @@ public class AppManager {
             );
             Request request = new Request.Builder()
                     .addHeader("label", "Test") // TODO: 테스트 끝나면 삭제
-                    .addHeader("type","collector")
+                    .addHeader("type", "collector")
                     .post(requestBody)
                     .url(URL + ":" + PORT)
                     .build();
@@ -67,7 +65,7 @@ public class AppManager {
                     Log.i("NETWORK_TEST", "Network Failed\n");
 
                     e.printStackTrace();
-                    Log.i("NETWORK_TEST", "CNT: "+okHttpClient.connectionPool().connectionCount());
+                    Log.i("NETWORK_TEST", "CNT: " + okHttpClient.connectionPool().connectionCount());
                     okHttpClient.connectionPool().evictAll();
                 }
 
@@ -76,34 +74,42 @@ public class AppManager {
                     Log.i("NETWORK_TEST", "File Transfer SUCCESS");
 //                                Toast.makeText(MainActivity.this, "Success", Toast.LENGTH_SHORT).show();
                     response.body().close();
-                    Log.i("Latency_info", "communication latency: " + (System.currentTimeMillis()-cstart));
+                    Log.i("Latency_info", "communication latency: " + (System.currentTimeMillis() - cstart));
                 }
             });
         } catch (IOException e) {
             e.printStackTrace();
-        }finally{
+        } finally {
             StateManager.isRecordEnd.postValue(false);
         }
     });
 
     private AppManager(Context context) {
+
         audioListener = new AudioListener(context);
         Security.insertProviderAt(Conscrypt.newProvider(), 1);
         okHttpClient = TrustOkHttpClientUtil.getUnsafeOkHttpClient().build();
 
         sharedPref = context.getSharedPreferences("com.capstone.galaxyknot", Context.MODE_PRIVATE);
+//        sharedPref.edit().clear().apply();
 
-        labelAndCmd = (Map<String, String>) sharedPref.getAll();
+        cmdAndLabel = (Map<String, String>) sharedPref.getAll();
+
+        for(String key : cmdAndLabel.keySet()){
+            Log.i("APP_MANAGER", "KEY_MAP\t" + key + "\t" + cmdAndLabel.get(key));
+        }
     }
 
-    public String getCommand(String label){
-        return labelAndCmd.get(label);
+    public String getCommand(String cmd){
+        return cmdAndLabel.get(cmd);
     }
 
     public void addCommand(String label, String cmd){
         SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(label, cmd);
+        editor.putString(cmd, label);
         editor.apply();
+
+        cmdAndLabel.put(cmd, label);
     }
 
     private static AppManager instance = null;
@@ -199,9 +205,9 @@ public class AppManager {
                                 public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                                     Log.i("NETWORK_TEST", "File Transfer SUCCESS");
 
-                                    String label = response.body().string();
-                                    Log.i("Classifier_response_body", label);
-                                    StateManager.label = label;
+                                    String cmd = response.body().string();
+                                    Log.i("Classifier_response_body", cmd + "\t" + cmdAndLabel.get(cmd));
+                                    StateManager.label = cmdAndLabel.get(cmd);
                                     StateManager.doShowToast.postValue(true);
 
                                     Objects.requireNonNull(response.body()).close();
@@ -209,9 +215,6 @@ public class AppManager {
                                     Log.i("Latency_info", "total communication latency: " + (end -cstart));
                                     Log.i("Latency_info", "only communication latency: " + (end -mid));
                                     Log.i("Latency_info", "communication prepare latency: " + (mid - cstart));
-
-
-
                                 }
                             });
                         } catch (IOException e) {
@@ -231,7 +234,7 @@ public class AppManager {
             StateManager.setObserver(StateManager.COLLECTOR_START, new Observer<Boolean>() {
                 @Override
                 public void onChanged(Boolean aBoolean) {
-                    Log.i("AUDIO_INFO", "CLASSIFIER_START_CHANGED");
+                    Log.i("AUDIO_INFO", "COLLECTOR_START_CHANGED");
                     isCollectorStartChanged = true;
                     synchronized (audioListener){
                         audioListener.notifyAll();
@@ -254,9 +257,12 @@ public class AppManager {
                             );
                             Log.i("NETWORK", "MAKE REQUEST");
 
+                            String cmd = StateManager.trainingCmd.get();
+                            Log.i("NETWORK_CMD", cmd);
+
                             Request request = new Request.Builder()
                                     .addHeader("type", "collector")
-                                    .addHeader("label", Objects.requireNonNull(StateManager.trainingCmd.get()))
+                                    .addHeader("label", cmd)
                                     .post(requestBody)
                                     .url(URL + ":" + PORT)
                                     .build();
@@ -284,7 +290,7 @@ public class AppManager {
                                     Log.i("Latency_info", "communication prepare latency: " + (mid - cstart));
                                     if(StateManager.trainingCount.getValue() != null){
                                         int newVal = StateManager.trainingCount.getValue() + 1;
-                                        if(newVal > 20){
+                                        if(newVal > TRAINING_SET_COUNT){
                                             newVal = 1;
                                             addCommand(StateManager.trainingLabel.get(), StateManager.trainingCmd.get());
                                             StateManager.isCollectorStart.postValue(false);
@@ -294,11 +300,21 @@ public class AppManager {
                                                     MediaType.parse("text/plain")
                                             );
                                             Request request = new Request.Builder()
-                                                    .addHeader("type", "collector")
+                                                    .addHeader("type", "collectingEnd")
                                                     .post(requestBody)
                                                     .url(URL + ":" + PORT)
                                                     .build();
-                                            okHttpClient.newCall(request).execute();
+                                            okHttpClient.newCall(request).enqueue(new Callback() {
+                                                @Override
+                                                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+
+                                                }
+
+                                                @Override
+                                                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                                                    Log.i("COLLECTOR", "Training Complete");
+                                                }
+                                            });
                                         }
                                         StateManager.trainingCount.postValue(newVal);
 
@@ -310,7 +326,6 @@ public class AppManager {
                         } finally {
                             StateManager.isRecordEnd.postValue(false);
                         }
-
                     }
                 }
             }, collectorOwner);
