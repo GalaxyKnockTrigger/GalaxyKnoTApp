@@ -5,4 +5,15 @@
     <string name="classifier_fragment_str">Hello Classifier</string>
     <string name="classifier_tag">classifier</string>
     <string name="collector_tag">collector</string>
+    <string name="cancel">Cancel</string>
+    <string name="canceled">Canceled.</string>
+    <string name="ok">OK</string>
+
+    <string-array name="state_array">
+        <item>T</item>
+        <item>ON</item>
+        <item>OFF</item>
+        <item>X</item>
+    </string-array>
 </resources>
+
