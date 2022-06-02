@@ -108,6 +108,14 @@ public class MainActivity extends FragmentActivity implements AmbientModeSupport
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        StateManager.isClassifierStart.setValue(false);
+        StateManager.isCollectorStart.setValue(false);
+        StateManager.isNowClassifierState.set(true);
+    }
+
+    @Override
     public boolean onGenericMotionEvent(MotionEvent ev) {
         Log.i("GENERICMOTION", "NOW: "+ev.getAction());
         Log.i("GENERICMOTION", "WANT: "+MotionEvent.ACTION_SCROLL);
