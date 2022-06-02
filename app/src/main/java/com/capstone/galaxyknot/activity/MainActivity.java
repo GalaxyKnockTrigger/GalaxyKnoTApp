@@ -22,19 +22,42 @@ import androidx.databinding.DataBindingUtil;
 import androidx.databinding.Observable;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Observer;
+import androidx.wear.ambient.AmbientModeSupport;
 
 import com.capstone.galaxyknot.AppManager;
 import com.capstone.galaxyknot.R;
 import com.capstone.galaxyknot.StateManager;
 import com.capstone.galaxyknot.databinding.MainActivityBinding;
 
-import java.util.Map;
-
-public class MainActivity extends FragmentActivity {
-
+public class MainActivity extends FragmentActivity implements AmbientModeSupport.AmbientCallbackProvider {
+    private static final String CMD_KEY = "com.capstone.galaxyknot.cmd";
     private MainActivityBinding binding;
-    private boolean permissionToUseAccepted = false;
+    private boolean permissionToUseAccepted = true;
     private AppManager appManager;
+
+    private AmbientModeSupport.AmbientController ambientController;
+
+    private class MyAmbientCallback extends AmbientModeSupport.AmbientCallback {
+        @Override
+        public void onEnterAmbient(Bundle ambientDetails) {
+            // Handle entering ambient mode
+//            super.onEnterAmbient(ambientDetails);
+//
+//            stateTextView.setTextColor(Color.WHITE);
+//            stateTextView.getPaint().setAntiAlias(false);
+        }
+
+        @Override
+        public void onExitAmbient() {
+            // Handle exiting ambient mode
+        }
+
+        @Override
+        public void onUpdateAmbient() {
+            // Update the content
+        }
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +65,7 @@ public class MainActivity extends FragmentActivity {
 
         ActivityCompat.requestPermissions(this, permissions, RCODE);
 
+        ambientController = AmbientModeSupport.attach(this);
         appManager = AppManager.getInstance(this.getApplicationContext());
 
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
@@ -56,7 +80,7 @@ public class MainActivity extends FragmentActivity {
         StateManager.setObserver(StateManager.SHOW_TOAST, new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean aBoolean) {
-                if(aBoolean){
+                if (aBoolean) {
                     StateManager.doShowToast.setValue(false);
                     MainActivity.this.runOnUiThread(new Runnable() {
                         @Override
@@ -77,7 +101,6 @@ public class MainActivity extends FragmentActivity {
 
         Log.i("MAIN_ACTIVITY", "onCreate Finished");
     }
-
     @Override
     protected void onStart() {
         super.onStart();
@@ -114,7 +137,10 @@ public class MainActivity extends FragmentActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == RCODE) {
-            permissionToUseAccepted = (grantResults[0] == PackageManager.PERMISSION_GRANTED);
+            for(int result : grantResults){
+                Log.i("MAIN_ACTIVITY", "RESULT_"+result);
+                permissionToUseAccepted = permissionToUseAccepted && (result == PackageManager.PERMISSION_GRANTED);
+            }
         }
         if(!permissionToUseAccepted){
 //            if(this.shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
@@ -174,4 +200,8 @@ public class MainActivity extends FragmentActivity {
         }
     }
 
+    @Override
+    public AmbientModeSupport.AmbientCallback getAmbientCallback() {
+        return new MyAmbientCallback();
+    }
 }
