@@ -20,30 +20,77 @@
         android:layout_height="match_parent"
         android:visibility="@{ !state.isNowClassifierState ? View.VISIBLE : View.GONE}"
         android:tag="@string/collector_tag">
+
         <EditText
             android:id="@+id/collector_edit_label"
             android:layout_width="110dp"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/collector_edit_cmd"
-            app:layout_constraintTop_toBottomOf="@+id/collector_start_btn"
-            app:layout_constraintVertical_chainStyle="packed"
             android:layout_marginVertical="@dimen/collector_ui_margin"
             android:hint="LABEL"
-            android:text="@{state.trainingLabel}"
-            />
-        <EditText
-            android:id="@+id/collector_edit_cmd"
+            android:text="@={state.trainingLabel}"
+            app:layout_constraintBottom_toTopOf="@id/collector_spin_2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/collector_start_btn"
+            app:layout_constraintVertical_chainStyle="packed" />
+<!--        <EditText-->
+<!--            android:id="@+id/collector_edit_cmd"-->
+<!--            android:layout_width="0dp"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            app:layout_constraintStart_toStartOf="@id/collector_edit_label"-->
+<!--            app:layout_constraintEnd_toEndOf="@id/collector_edit_label"-->
+<!--            app:layout_constraintTop_toBottomOf="@id/collector_edit_label"-->
+<!--            app:layout_constraintBottom_toBottomOf="parent"-->
+<!--            app:layout_constraintVertical_chainStyle="packed"-->
+<!--            android:hint="COMMAND"-->
+<!--            android:text="@={state.trainingCmd}"-->
+<!--            />-->
+<!--        -->
+
+        <TextView
+            android:id="@+id/collector_spin_1"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="@dimen/spinner_height"
+            android:dropDownWidth="wrap_content"
+            app:layout_constraintBottom_toBottomOf="@id/collector_spin_2"
+            app:layout_constraintEnd_toStartOf="@+id/collector_spin_2"
             app:layout_constraintStart_toStartOf="@id/collector_edit_label"
-            app:layout_constraintEnd_toEndOf="@id/collector_edit_label"
-            app:layout_constraintTop_toBottomOf="@id/collector_edit_label"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="@id/collector_spin_2"
             app:layout_constraintVertical_chainStyle="packed"
-            android:hint="COMMAND"
-            android:text="@{state.trainingCmd}"
+            android:onClick="@{view -> frag.onClick(view)}"
+            android:text="X"
+            android:textSize="18sp"
+            android:textAlignment="center"
+            />
+
+        <TextView
+            android:id="@+id/collector_spin_2"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/spinner_height"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/collector_spin_3"
+            app:layout_constraintStart_toEndOf="@id/collector_spin_1"
+            app:layout_constraintTop_toBottomOf="@id/collector_edit_label"
+            app:layout_constraintVertical_chainStyle="packed"
+            android:onClick="@{view -> frag.onClick(view)}"
+            android:text="X"
+            android:textSize="18sp"
+            android:textAlignment="center"
+            />
+
+        <TextView
+            android:id="@id/collector_spin_3"
+            android:layout_width="0dp"
+            android:layout_height="@dimen/spinner_height"
+            app:layout_constraintBottom_toBottomOf="@id/collector_spin_2"
+            app:layout_constraintEnd_toEndOf="@id/collector_edit_label"
+            app:layout_constraintStart_toEndOf="@id/collector_spin_2"
+            app:layout_constraintTop_toTopOf="@id/collector_spin_2"
+            app:layout_constraintVertical_chainStyle="packed"
+            android:onClick="@{view -> frag.onClick(view)}"
+            android:text="X"
+            android:textSize="18sp"
+            android:textAlignment="center"
             />
         <TextView
             android:id="@+id/collector_counter"
