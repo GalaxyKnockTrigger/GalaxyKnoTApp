@@ -105,6 +105,13 @@ public class AppManager {
     }
 
     public void addCommand(String label, String cmd){
+
+        if(cmdAndLabel.containsKey(cmd)){
+            if(cmdAndLabel.get(cmd).equals(label)){
+                return;
+            }
+        }
+
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putString(cmd, label);
         editor.apply();
