@@ -78,15 +78,19 @@ public class AudioListener implements IGetDataSize {
             synchronized (shortBuffer) {
                 int size = recorder.read(bufferRecord, 0, bufferRecordSize);
                 if (!recordStart) {
+                    short maxVal = TH_SOUND_PEAK;
+                    int maxPos = 0;
                     for(int i = 0; i < bufferRecord.length; i++){
                         short val = bufferRecord[i];
-                        if (val > TH_SOUND_PEAK) {
+                        if (val > maxVal) {
+                            maxPos = i;
                             Log.i("AUDIO_INFO_VAL", "" + val);
                             recordStart = true;
-                            shortBuffer.put(bufferRecord, i, size - i);
-                            start = System.currentTimeMillis();
-                            break;
                         }
+                    }
+                    if(recordStart){
+                        shortBuffer.put(bufferRecord, maxPos, size - maxPos);
+                        start = System.currentTimeMillis();
                     }
                 } else {
                     shortBuffer.put(bufferRecord, 0, size);
