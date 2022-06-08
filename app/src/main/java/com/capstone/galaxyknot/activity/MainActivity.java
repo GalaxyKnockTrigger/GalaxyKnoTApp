@@ -88,7 +88,7 @@ public class MainActivity extends FragmentActivity implements AmbientModeSupport
                             String label = StateManager.label;
                             Toast.makeText(
                                     MainActivity.this.getApplicationContext(),
-                                    label + AppManager.getInstance().getCommand(label),
+                                    label,
                                     Toast.LENGTH_SHORT)
                                     .show();
                         }
