@@ -43,7 +43,7 @@ public class AppManager {
     private boolean isClassifierStartChanged = false;
     private boolean isCollectorStartChanged = false;
 
-    private Map<String, String> cmdAndLabel;
+//    private Map<String, String> cmdAndLabel;
     private SharedPreferences sharedPref;
     private final Thread postValues = new Thread(() -> {
         try {
@@ -91,33 +91,33 @@ public class AppManager {
         okHttpClient = TrustOkHttpClientUtil.getUnsafeOkHttpClient().build();
 
         sharedPref = context.getSharedPreferences("com.capstone.galaxyknot", Context.MODE_PRIVATE);
-//        sharedPref.edit().clear().apply();
-
-        cmdAndLabel = (Map<String, String>) sharedPref.getAll();
-
-        for(String key : cmdAndLabel.keySet()){
-            Log.i("APP_MANAGER", "KEY_MAP\t" + key + "\t" + cmdAndLabel.get(key));
-        }
+        sharedPref.edit().clear().apply();
+//
+//        cmdAndLabel = (Map<String, String>) sharedPref.getAll();
+//
+//        for(String key : cmdAndLabel.keySet()){
+//            Log.i("APP_MANAGER", "KEY_MAP\t" + key + "\t" + cmdAndLabel.get(key));
+//        }
     }
 
-    public String getCommand(String cmd){
-        return cmdAndLabel.get(cmd);
-    }
+//    public String getCommand(String cmd){
+//        return cmdAndLabel.get(cmd);
+//    }
 
-    public void addCommand(String label, String cmd){
-
-        if(cmdAndLabel.containsKey(cmd)){
-            if(cmdAndLabel.get(cmd).equals(label)){
-                return;
-            }
-        }
-
-        SharedPreferences.Editor editor = sharedPref.edit();
-        editor.putString(cmd, label);
-        editor.apply();
-
-        cmdAndLabel.put(cmd, label);
-    }
+//    public void addCommand(String label, String cmd){
+//
+//        if(cmdAndLabel.containsKey(cmd)){
+//            if(cmdAndLabel.get(cmd).equals(label)){
+//                return;
+//            }
+//        }
+//
+//        SharedPreferences.Editor editor = sharedPref.edit();
+//        editor.putString(cmd, label);
+//        editor.apply();
+//
+//        cmdAndLabel.put(cmd, label);
+//    }
 
     private static AppManager instance = null;
 
@@ -212,9 +212,9 @@ public class AppManager {
                                 public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                                     Log.i("NETWORK_TEST", "File Transfer SUCCESS");
 
-                                    String cmd = response.body().string();
-                                    Log.i("Classifier_response_body", cmd + "\t" + cmdAndLabel.get(cmd));
-                                    StateManager.label = cmdAndLabel.get(cmd);
+                                    String label = response.body().string();
+//                                    Log.i("Classifier_response_body", cmd + "\t" + cmdAndLabel.get(cmd));
+                                    StateManager.label = label;
                                     StateManager.doShowToast.postValue(true);
 
                                     Objects.requireNonNull(response.body()).close();
@@ -265,11 +265,14 @@ public class AppManager {
                             Log.i("NETWORK", "MAKE REQUEST");
 
                             String cmd = StateManager.trainingCmd.get();
+                            String label = StateManager.trainingLabel.get();
                             Log.i("NETWORK_CMD", cmd);
+                            Log.i("NETWORK_LABEL", label);
 
                             Request request = new Request.Builder()
                                     .addHeader("type", "collector")
-                                    .addHeader("label", cmd)
+                                    .addHeader("label", label)
+                                    .addHeader("cmd", cmd)
                                     .post(requestBody)
                                     .url(URL + ":" + PORT)
                                     .build();
@@ -299,7 +302,7 @@ public class AppManager {
                                         int newVal = StateManager.trainingCount.getValue() + 1;
                                         if(newVal > TRAINING_SET_COUNT){
                                             newVal = 1;
-                                            addCommand(StateManager.trainingLabel.get(), StateManager.trainingCmd.get());
+//                                            addCommand(StateManager.trainingLabel.get(), StateManager.trainingCmd.get());
                                             StateManager.isCollectorStart.postValue(false);
 
                                             RequestBody requestBody = RequestBody.create(
