@@ -113,6 +113,9 @@ public class MainActivity extends FragmentActivity implements AmbientModeSupport
         StateManager.isClassifierStart.setValue(false);
         StateManager.isCollectorStart.setValue(false);
         StateManager.isNowClassifierState.set(true);
+        StateManager.trainingCount.setValue(1);
+        StateManager.trainingCmd.set("444");
+        StateManager.trainingLabel.set("");
     }
 
     @Override
