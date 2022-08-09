@@ -7,6 +7,9 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 public class Constants {
+    public static final int TYPE_ACCEL = Sensor.TYPE_LINEAR_ACCELERATION;
+    public static final int TYPE_GYRO = Sensor.TYPE_GYROSCOPE_UNCALIBRATED;
+
     public static final String[] permissions = {
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.ACCESS_COARSE_LOCATION,
