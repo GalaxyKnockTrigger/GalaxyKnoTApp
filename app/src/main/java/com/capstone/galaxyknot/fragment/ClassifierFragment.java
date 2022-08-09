@@ -32,19 +32,27 @@ public class ClassifierFragment extends Fragment {
         binding.setFrag(this);
         binding.setIsClassifier(StateManager.isNowClassifierState);
 
+        binding.classifierButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onClassifierButtonClick();
+            }
+        });
+
         return binding.getRoot();
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        AppManager.getInstance().setClassifierOwner(this.getViewLifecycleOwner());
+        AppManager.getInstance().setClassifierOwner(this.getViewLifecycleOwner(), this);
     }
 
-    public void onClassifierButtonClick(View v){
-        boolean val = !v.isSelected();
-        v.setSelected(val);
+    public void onClassifierButtonClick(){
+        boolean val = !binding.classifierButton.isSelected();
+        binding.classifierButton.setSelected(val);
         StateManager.isClassifierStart.setValue(val);
         Log.i("AUDIO_INFO", "Button " + (val ? "Start" : "Stop"));
     }
+
 }
