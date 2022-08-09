@@ -104,7 +104,7 @@ public class MainActivity extends FragmentActivity implements AmbientModeSupport
     @Override
     protected void onStart() {
         super.onStart();
-        appManager.startAudioThread();
+        appManager.startThreads();
     }
 
     @Override
@@ -116,6 +116,14 @@ public class MainActivity extends FragmentActivity implements AmbientModeSupport
         StateManager.trainingCount.setValue(1);
         StateManager.trainingCmd.set("444");
         StateManager.trainingLabel.set("");
+
+        appManager.stopThreads();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        appManager.startThreads();
     }
 
     @Override
