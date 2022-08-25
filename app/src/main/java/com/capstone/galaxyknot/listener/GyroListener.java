@@ -33,23 +33,7 @@ public class GyroListener extends IMUListener {
         return dataQueue.size();
     }
     public LinkedList<Float> getData(){
-        float[] data = dataQueue.stream().sorted(new Comparator<float[]>() {
-            @Override
-            public int compare(float[] o1, float[] o2) {
-                float f1 = 0, f2 = 0;
 
-                for(int i = 0; i < 3; i++){
-                    f1 += o1[i] * o1[i];
-                    f2 += o2[i] * o2[i];
-                }
-
-                return Float.compare(f2, f1);
-            }
-        }).iterator().next();
-
-        Log.i("GyroListener GetData", ": " + data[0] + ", " + data[1] + ", " + data[2]);
-
-        int maxIdx = dataQueue.indexOf(data);
         StringBuilder d = new StringBuilder();
 
         LinkedList<Float> ret = new LinkedList<>();

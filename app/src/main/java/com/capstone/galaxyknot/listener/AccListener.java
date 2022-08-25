@@ -38,7 +38,7 @@ class AccListener extends IMUListener {
     }
 
     public LinkedList<Float> getData(){
-        float[] data = dataQueue.stream().sorted(new Comparator<float[]>() {
+        float[] data = dataQueue.subList(0, dataQueue.size()-8).stream().sorted(new Comparator<float[]>() {
             @Override
             public int compare(float[] o1, float[] o2) {
                 float f1 = 0, f2 = 0;
@@ -54,7 +54,8 @@ class AccListener extends IMUListener {
 
         Log.i("AccListener GetData", ": " + data[0] + ", " + data[1] + ", " + data[2]);
 
-        int maxIdx = dataQueue.indexOf(data);
+        maxIdx = dataQueue.indexOf(data);
+
         LinkedList<Float> ret = new LinkedList<>();
         StringBuilder d = new StringBuilder().append(dataQueue.size()).append(',');
 
