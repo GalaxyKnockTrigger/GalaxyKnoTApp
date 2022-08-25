@@ -103,6 +103,16 @@ public class AppManager {
     private Map<String, Thread> sensingThList;
 
     private AppManager(Context context) {
+        Security.insertProviderAt(Conscrypt.newProvider(), 1);
+        okHttpClient = TrustOkHttpClientUtil.getUnsafeOkHttpClient().build();
+
+        sharedPref = context.getSharedPreferences("com.capstone.galaxyknot", Context.MODE_PRIVATE);
+//        sharedPref.edit().clear().apply();
+
+        if(!sharedPref.contains("userid")){
+            Log.i("User_ID", "get User Id Start");
+            getUserId();
+        }
 
         audioListener = new AudioListener(context);
 
@@ -252,7 +262,7 @@ public class AppManager {
                             audioListener.onRecord(StateManager.isClassifierStart.getValue());
 
                         } else if (!StateManager.isNowClassifierState.get()) {
-                            Log.i("AUDIO_TH", "Collector Start Changed");
+                            Log.i("AUDIO_TH", "Collector Start Changed to " + (StateManager.isCollectorStart.getValue() ? "True" : "False"));
                             audioListener.onRecord(StateManager.isCollectorStart.getValue());
 
                         }
@@ -288,9 +298,8 @@ public class AppManager {
                     }
                 }
             }, classifierOwner);
-            StateManager.setObserver(StateManager.RECORD_END, new Observer<Boolean>() {
-                @Override
-                public void onChanged(Boolean val) {
+            StateManager.setObserver(StateManager.RECORD_END,
+                (Boolean val) -> {
                     // record end가 true일 때
                     if(val && StateManager.isNowClassifierState.get()){
                         Log.i("AUDIO_INFO", "RECORD is ENDED + CLASSIFIER");
@@ -312,6 +321,7 @@ public class AppManager {
 
                             Request request = new Request.Builder()
                                     .addHeader("type","classifier")
+                                    .addHeader("user-id", ""+sharedPref.getLong("userid", 0))
                                     .post(requestBody)
                                     .url(URL + ":" + PORT)
                                     .build();
@@ -333,6 +343,7 @@ public class AppManager {
                                     Log.i("NETWORK_TEST", "File Transfer SUCCESS");
 
                                     String label = response.body().string();
+
 //                                    Log.i("Classifier_response_body", cmd + "\t" + cmdAndLabel.get(cmd));
                                     StateManager.label = label;
                                     StateManager.doShowToast.postValue(true);
@@ -343,10 +354,10 @@ public class AppManager {
                                     Log.i("Latency_info", "only communication latency: " + (end -mid));
                                     Log.i("Latency_info", "communication prepare latency: " + (mid - cstart));
 
-                                    //StateManager.isClassifierStart.postValue(false);
+                                    StateManager.isClassifierStart.postValue(false);
 
                                     // TODO: 네트워크 복구되면 주석 해제
-//                                    frag.onClassifierButtonClick();
+                                    frag.onClassifierButtonClick();
                                 }
                             });
                         } catch (IOException e) {
@@ -355,11 +366,11 @@ public class AppManager {
                             StateManager.isRecordEnd.postValue(false);
 
                             // TODO: 네트워크 복구되면 주석 처리.
-                            frag.onClassifierButtonClick();
+//                            frag.onClassifierButtonClick();
                         }
                     }
                 }
-            }, classifierOwner);
+            , classifierOwner);
         }
     }
 
@@ -371,15 +382,16 @@ public class AppManager {
                 public void onChanged(Boolean aBoolean) {
                     Log.i("AUDIO_INFO", "COLLECTOR_START_CHANGED");
 //                    isCollectorStartChanged = true;
-                    synchronized (audioListener){
-                        audioListener.notifyAll();
-                    }
                     synchronized (accListener){
                         accListener.notifyAll();
                     }
                     synchronized (gyroListener){
                         gyroListener.notifyAll();
                     }
+                    synchronized (audioListener){
+                        audioListener.notifyAll();
+                    }
+
                 }
             }, collectorOwner);
             StateManager.setObserver(StateManager.RECORD_END, new Observer<Boolean>() {
@@ -411,6 +423,7 @@ public class AppManager {
                                     .addHeader("type", "collector")
                                     .addHeader("label", label)
                                     .addHeader("cmd", cmd)
+                                    .addHeader("user-id", ""+sharedPref.getLong("userid", 0))
                                     .post(requestBody)
                                     .url(URL + ":" + PORT)
                                     .build();
@@ -449,6 +462,7 @@ public class AppManager {
                                             );
                                             Request request = new Request.Builder()
                                                     .addHeader("type", "collectingEnd")
+                                                    .addHeader("user-id", ""+sharedPref.getLong("userid", 0))
                                                     .post(requestBody)
                                                     .url(URL + ":" + PORT)
                                                     .build();
@@ -465,7 +479,7 @@ public class AppManager {
                                             });
                                         }
                                         StateManager.trainingCount.postValue(newVal);
-
+                                        Log.i("COLLECTOR_CNT", "" + newVal);
                                     }
                                 }
                             });
@@ -498,12 +512,7 @@ public class AppManager {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         GZIPOutputStream gzip = new GZIPOutputStream(out);
 
-        byte[] bytes = new byte[str.length() * 2];
-
-        for (int i = 0; i < str.length(); i++) {
-            bytes[2 * i] = (byte) (str.charAt(i) >> 8);
-            bytes[2 * i + 1] = (byte) (str.charAt(i) & 0x00FF);
-        }
+        byte[] bytes = str.getBytes(StandardCharsets.UTF_8);
 
         gzip.write(bytes);
         gzip.flush();

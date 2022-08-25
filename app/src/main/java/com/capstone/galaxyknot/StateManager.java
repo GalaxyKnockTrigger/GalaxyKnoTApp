@@ -23,7 +23,6 @@ public class StateManager {
 
     public static ObservableBoolean isNowClassifierState = new ObservableBoolean(true);
     public static ObservableField<String> trainingLabel = new ObservableField<>("");
-
     public static ObservableField<String>  trainingCmd  = new ObservableField<>("444");
 
     public static MutableLiveData<Boolean> isClassifierStart    = new MutableLiveData<>(false);
@@ -32,6 +31,8 @@ public class StateManager {
     public static MutableLiveData<Boolean> doShowToast         = new MutableLiveData<>(false);
     public static MutableLiveData<Boolean> isRecordEnd = new MutableLiveData<>(false);
     public static MutableLiveData<Integer> trainingCount = new MutableLiveData<>(1);
+
+    public static MutableLiveData<Boolean> isGottenClassifierResponse = new MutableLiveData<>(false);
 
     public static String label;
 

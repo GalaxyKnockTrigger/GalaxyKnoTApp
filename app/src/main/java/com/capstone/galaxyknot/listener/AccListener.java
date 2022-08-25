@@ -56,11 +56,23 @@ class AccListener extends IMUListener {
 
         int maxIdx = dataQueue.indexOf(data);
         LinkedList<Float> ret = new LinkedList<>();
+        StringBuilder d = new StringBuilder().append(dataQueue.size()).append(',');
+
+        for(int j = 0; j < 3; j++) {
+            for (int i = dataQueue.size()/2; i < dataQueue.size(); i++) {
+                d.append(dataQueue.get(i)[j]).append(',');
+            }
+            d.append('\n');
+        }
+
         for(int j = 0; j < 3; j++) {
             for (int i = maxIdx; i < maxIdx + 8; i++) {
                 ret.add(dataQueue.get(i)[j]);
+//                d.append(ret.getLast()).append(',');
             }
         }
+        Log.i("ACCEL_VAL", d.toString());
+
         dataQueue.clear();
         return ret;
     }

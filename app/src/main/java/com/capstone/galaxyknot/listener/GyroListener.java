@@ -50,12 +50,17 @@ public class GyroListener extends IMUListener {
         Log.i("GyroListener GetData", ": " + data[0] + ", " + data[1] + ", " + data[2]);
 
         int maxIdx = dataQueue.indexOf(data);
+        StringBuilder d = new StringBuilder();
+
         LinkedList<Float> ret = new LinkedList<>();
         for(int j = 0; j < 3; j++) {
             for (int i = maxIdx; i < maxIdx + 8; i++) {
                 ret.add(dataQueue.get(i)[j]);
+                d.append(ret.getLast()).append(',');
             }
         }
+        Log.i("GYRO_VAL", d.toString());
+
         dataQueue.clear();
         return ret;
     }

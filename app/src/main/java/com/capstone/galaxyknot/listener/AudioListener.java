@@ -151,7 +151,7 @@ public class AudioListener implements IGetDataSize {
                 if(i >= 4096)
                     break;
                 arr[i] = v;
-                sb.append(arr[i]).append('\n');
+                sb.append(arr[i]).append(',');
                 i++;
             }
             shortBuffer.rewind();
@@ -159,7 +159,7 @@ public class AudioListener implements IGetDataSize {
         }
 
         Log.i("AUDIO_VAL", sb.toString());
-        Log.i("Latency_info", "Getting Data Latency: " + (System.currentTimeMillis() - start));
+//        Log.i("Latency_info", "Getting Data Latency: " + (System.currentTimeMillis() - start));
         return new LinkedList<>(Arrays.asList(arr));
     }
 
